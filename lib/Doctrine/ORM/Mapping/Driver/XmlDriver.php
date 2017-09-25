@@ -10,6 +10,7 @@ use Doctrine\ORM\Mapping\ClassMetadata as Metadata;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\Persistence\Mapping\ClassMetadata;
 use Doctrine\Persistence\Mapping\Driver\FileDriver;
+use DOMDocument;
 use InvalidArgumentException;
 use LogicException;
 use SimpleXMLElement;
@@ -22,6 +23,9 @@ use function explode;
 use function extension_loaded;
 use function file_get_contents;
 use function in_array;
+use function libxml_clear_errors;
+use function libxml_get_errors;
+use function libxml_use_internal_errors;
 use function simplexml_load_string;
 use function sprintf;
 use function str_replace;
@@ -935,6 +939,7 @@ class XmlDriver extends FileDriver
      */
     protected function loadMappingFile($file)
     {
+        $this->validateMapping($file);
         $result = [];
         // Note: we do not use `simplexml_load_file()` because of https://bugs.php.net/bug.php?id=62577
         $xmlElement = simplexml_load_string(file_get_contents($file));
@@ -960,6 +965,23 @@ class XmlDriver extends FileDriver
         }
 
         return $result;
+    }
+
+    private function validateMapping(string $file): void
+    {
+        $backedUpErrorSetting = libxml_use_internal_errors(true);
+
+        $document = new DOMDocument();
+        $document->load($file);
+
+        try {
+            if (! $document->schemaValidate(__DIR__ . '/../../../../../doctrine-mapping.xsd')) {
+                throw MappingException::fromLibXmlErrors(libxml_get_errors());
+            }
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($backedUpErrorSetting);
+        }
     }
 
     /**

@@ -21,6 +21,7 @@
     },
     "require": {
         "php": "^7.1 || ^8.0",
+        "ext-dom": "*",
         "composer-runtime-api": "^2",
         "ext-ctype": "*",
         "doctrine/cache": "^1.12.1 || ^2.1.1",
