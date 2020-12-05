@@ -707,26 +707,25 @@ clauses:
 -  ``CURRENT_DATE()`` - Return the current date
 -  ``CURRENT_TIME()`` - Returns the current time
 -  ``CURRENT_TIMESTAMP()`` - Returns a timestamp of the current date
-   and time.
+     and time.
 -  ``LENGTH(str)`` - Returns the length of the given string
 -  ``LOCATE(needle, haystack [, offset])`` - Locate the first
-   occurrence of the substring in the string.
+     occurrence of the substring in the string.
 -  ``LOWER(str)`` - returns the string lowercased.
 -  ``MOD(a, b)`` - Return a MOD b.
 -  ``SIZE(collection)`` - Return the number of elements in the
-   specified collection
+     specified collection
 -  ``SQRT(q)`` - Return the square-root of q.
 -  ``SUBSTRING(str, start [, length])`` - Return substring of given
-   string.
--  ``TRIM([LEADING \| TRAILING \| BOTH] ['trchar' FROM] str)`` - Trim
-   the string by the given trim char, defaults to whitespaces.
+     string.
+-  ``TRIM([LEADING | TRAILING | BOTH] ['trchar' FROM] str)`` - Trim
+     the string by the given trim char, defaults to whitespaces.
 -  ``UPPER(str)`` - Return the upper-case of the given string.
 -  ``DATE_ADD(date, value, unit)`` - Add the given time to a given date.
-   (Supported units are ``SECOND``, ``MINUTE``, ``HOUR``, ``DAY``,
-   ``WEEK``, ``MONTH``, ``YEAR``)
+   (Supported units are ``SECOND``, ``MINUTE``, ``HOUR``, ``DAY``, ``WEEK``, ``MONTH``, ``YEAR``)
 -  ``DATE_SUB(date, value, unit)`` - Subtract the given time from a
-   given date. (Supported units are ``SECOND``, ``MINUTE``, ``HOUR``,
-   ``DAY``, ``WEEK``, ``MONTH``, ``YEAR``)
+  given date. (Supported units are ``SECOND``, ``MINUTE``, ``HOUR``,
+  ``DAY``, ``WEEK``, ``MONTH``, ``YEAR``)
 -  ``DATE_DIFF(date1, date2)`` - Calculate the difference in days
    between date1-date2.
 
