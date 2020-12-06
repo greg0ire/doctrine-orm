@@ -16,7 +16,7 @@ use Doctrine\Tests\OrmFunctionalTestCase;
 
 class GH7512Test extends OrmFunctionalTestCase
 {
-    protected function setUp() : void
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -32,7 +32,7 @@ class GH7512Test extends OrmFunctionalTestCase
         $this->_em->clear();
     }
 
-    public function testFindEntityByAssociationPropertyJoinedChildWithClearMetadata() : void
+    public function testFindEntityByAssociationPropertyJoinedChildWithClearMetadata(): void
     {
         // unset metadata for entity B as though it hasn't been touched yet in application lifecycle.
         $this->_em->getMetadataFactory()->setMetadataFor(GH7512EntityB::class, null);
