@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace Doctrine\Tests\ORM\Functional;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\Deprecations\PHPUnit\VerifyDeprecations;
+use Doctrine\ORM\Exception\NotSupported;
 use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\Entity;
 use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\Tests\OrmFunctionalTestCase;
 
+use function method_exists;
 use function strlen;
 
 /**
@@ -20,16 +23,26 @@ class UUIDGeneratorTest extends OrmFunctionalTestCase
 {
     use VerifyDeprecations;
 
+    /**
+     * @group dbal2
+     */
     public function testItIsDeprecated(): void
     {
         $this->expectDeprecationWithIdentifier('https://github.com/doctrine/orm/issues/7312');
         $this->_em->getClassMetadata(UUIDEntity::class);
     }
 
+    /**
+     * @group dbal2
+     */
     public function testGenerateUUID(): void
     {
         if ($this->_em->getConnection()->getDatabasePlatform()->getName() !== 'mysql') {
             self::markTestSkipped('Currently restricted to MySQL platform.');
+        }
+
+        if (! method_exists(Connection::class, 'getGuidExpression')) {
+            self::markTestSkipped('Test valid for doctrine/dbal:2.x only.');
         }
 
         $this->_schemaTool->createSchema([
@@ -40,6 +53,15 @@ class UUIDGeneratorTest extends OrmFunctionalTestCase
         $this->_em->persist($entity);
         self::assertNotNull($entity->getId());
         self::assertGreaterThan(0, strlen($entity->getId()));
+    }
+
+    /**
+     * @group dbal3
+     */
+    public function testItCannotBeInitialised(): void
+    {
+        $this->expectException(NotSupported::class);
+        $this->_em->getClassMetadata(UUIDEntity::class);
     }
 }
 

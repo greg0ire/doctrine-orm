@@ -28,6 +28,7 @@
         <exclude>
             <group>performance</group>
             <group>locking_functional</group>
+            <group>dbal3</group>
         </exclude>
     </groups>
 
