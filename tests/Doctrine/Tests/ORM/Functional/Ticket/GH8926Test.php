@@ -28,6 +28,7 @@ class GH8926Test extends OrmFunctionalTestCase
         $this->_schemaTool->createSchema([
             $this->_em->getClassMetadata(First::class),
             $this->_em->getClassMetadata(Second::class),
+            $this->_em->getClassMetadata(SecondLazy::class),
             $this->_em->getClassMetadata(Third::class),
         ]);
     }
@@ -38,6 +39,7 @@ class GH8926Test extends OrmFunctionalTestCase
         $this->_schemaTool->dropSchema([
             $this->_em->getClassMetadata(First::class),
             $this->_em->getClassMetadata(Second::class),
+            $this->_em->getClassMetadata(SecondLazy::class),
             $this->_em->getClassMetadata(Third::class),
         ]);
     }
@@ -50,11 +52,11 @@ class GH8926Test extends OrmFunctionalTestCase
         // Create First- and Second-relation
         $first  = new First($firstId);
         $second = new Second($first);
-        $first->getSecond()->add($second);
+        $first->setSecond($second);
 
         // Create Third entities, associate with Second instance
         $thirdA = new Third($thirdAId);
-        $thirdB = new Third($thirdBId);
+        $thirdB =  new Third($thirdBId);
         $second->getThird()->add($thirdA);
         $second->getThird()->add($thirdB);
 
@@ -72,7 +74,49 @@ class GH8926Test extends OrmFunctionalTestCase
         // then force loading of Second instance
         $loadedFirst = $this->_em->find(First::class, $firstId);
         assert($loadedFirst instanceof First);
-        $loadedFirst->getSecond()->get(0); // <-- This will crash
+        $loadedSecond = $loadedFirst->getSecond(); // <-- This will crash
+    }
+
+    public function testIssueWorkingWhenFetchLazy(): void
+    {
+        [$firstId, $thirdAId, $thirdBId] = self::RANDOM_UUIDS;
+
+        // Create First- and Second-relation
+        $first  = new First($firstId);
+        $second = new SecondLazy($first);
+        $first->setSecondLazy($second);
+
+        // Create Third entities, associate with Second instance
+        $thirdA = new Third($thirdAId);
+        $thirdB = new Third($thirdBId);
+        $second->getThird()->add($thirdA);
+        $second->getThird()->add($thirdB);
+
+        // Persist everything, this works fine
+        $this->_em->persist($thirdA);
+        $this->_em->persist($thirdB);
+        $this->_em->persist($first);
+        $this->_em->flush();
+
+        // Clear EntityManager to force a reload
+        $this->_em->clear();
+
+        // Load First instance from EntityManager,
+        // then force loading of Second instance
+        $loadedFirst = $this->_em->find(First::class, $firstId);
+        $this->assertInstanceOf(First::class, $loadedFirst);
+        $this->assertEquals($firstId, $first->getId());
+
+        $loadedSecond = $loadedFirst->getSecondLazy(); // <-- This will NOT crash when using fetch=LAZY
+        $this->assertInstanceOf(SecondLazy::class, $loadedSecond);
+        $this->assertEquals($firstId, $second->getFirst()->getId());
+
+        $loadedThirdA = $loadedSecond->getThird()->get(0);
+        $loadedThirdB = $loadedSecond->getThird()->get(1);
+        $this->assertInstanceOf(Third::class, $loadedThirdA);
+        $this->assertInstanceOf(Third::class, $loadedThirdB);
+        $this->assertEquals($thirdAId, $loadedThirdA->getId());
+        $this->assertEquals($thirdBId, $loadedThirdB->getId());
     }
 }
 
@@ -89,15 +133,22 @@ class First
     private $id;
 
     /**
-     * @OneToMany(targetEntity="Second", mappedBy="first", fetch="EXTRA_LAZY", orphanRemoval="true", cascade={"all"})
-     * @var Collection
+     * @OneToOne(targetEntity="Second", mappedBy="first", fetch="EXTRA_LAZY", orphanRemoval=true, cascade={"all"})
+     * @var Second|null
      */
     private $second;
 
+    /**
+     * @OneToOne(targetEntity="SecondLazy", mappedBy="first", fetch="EXTRA_LAZY", orphanRemoval=true, cascade={"all"})
+     * @var SecondLazy|null
+     */
+    private $secondLazy;
+
     public function __construct(string $id)
     {
-        $this->id     = $id;
-        $this->second = new ArrayCollection();
+        $this->id         = $id;
+        $this->second     = null;
+        $this->secondLazy = null;
     }
 
     public function getId(): string
@@ -105,9 +156,24 @@ class First
         return $this->id;
     }
 
-    public function getSecond(): Collection
+    public function getSecond(): ?Second
     {
         return $this->second;
+    }
+
+    public function setSecond(Second $second): void
+    {
+        $this->second = $second;
+    }
+
+    public function getSecondLazy(): ?SecondLazy
+    {
+        return $this->secondLazy;
+    }
+
+    public function setSecondLazy(SecondLazy $secondLazy): void
+    {
+        $this->secondLazy = $secondLazy;
     }
 }
 
@@ -118,7 +184,7 @@ class Second
 {
     /**
      * @Id
-     * @ManyToOne(targetEntity="First", inversedBy="second", fetch="EAGER")
+     * @OneToOne(targetEntity="First", inversedBy="second", fetch="EAGER")
      * @JoinColumn(
      *     name="first_id",
      *     referencedColumnName="id",
@@ -134,11 +200,54 @@ class Second
      * @ManyToMany(targetEntity="Third", fetch="EAGER")
      * @JoinTable(name="second_third",
      *      joinColumns={@JoinColumn(name="second_id", referencedColumnName="first_id")},
-     *      inverseJoinColumns={@JoinColumn(
-     *     name="third_id",
+     *      inverseJoinColumns={@JoinColumn(name="third_id", referencedColumnName="id", unique=true)}
+     * )
+     * @var Collection
+     */
+    private $third;
+
+    public function __construct(First $first)
+    {
+        $this->first = $first;
+        $this->third = new ArrayCollection();
+    }
+
+    public function getFirst(): First
+    {
+        return $this->first;
+    }
+
+    public function getThird(): Collection
+    {
+        return $this->third;
+    }
+}
+
+/**
+ * @Entity
+ */
+class SecondLazy
+{
+    /**
+     * @Id
+     * @OneToOne(targetEntity="First", inversedBy="second", fetch="EAGER")
+     * @JoinColumn(
+     *     name="first_id",
      *     referencedColumnName="id",
-     *     unique=true
-     * )})
+     *     unique="true",
+     *     nullable="false",
+     *     onDelete="cascade"
+     * )
+     * @var First
+     */
+    private $first;
+
+    /**
+     * @ManyToMany(targetEntity="Third", fetch="LAZY")
+     * @JoinTable(name="second_third_lazy",
+     *     joinColumns={@JoinColumn(name="second_id", referencedColumnName="first_id")},
+     *     inverseJoinColumns={@JoinColumn(name="third_id", referencedColumnName="id", unique=true)}
+     * )
      * @var Collection
      */
     private $third;
@@ -182,4 +291,3 @@ class Third
         return $this->id;
     }
 }
-
