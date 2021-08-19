@@ -1011,6 +1011,13 @@ class BasicEntityPersister implements EntityPersister
                     $value = $sourceClass->reflFields[$field]->getValue($sourceEntity);
 
                     if (isset($sourceClass->associationMappings[$field])) {
+                        if ($value === null) {
+                            throw new \UnexpectedValueException(sprintf(
+                                'Unexpected null value for field %s::$%s',
+                                $sourceClass->name,
+                                $field
+                            ));
+                        }
                         $value = $this->em->getUnitOfWork()->getEntityIdentifier($value);
                         $value = $value[$this->em->getClassMetadata($sourceClass->associationMappings[$field]['targetEntity'])->identifier[0]];
                     }
