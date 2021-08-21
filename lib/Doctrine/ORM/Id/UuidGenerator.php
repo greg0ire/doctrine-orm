@@ -9,6 +9,7 @@ use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Exception\NotSupported;
 
+use Exception;
 use function method_exists;
 
 /**
@@ -39,9 +40,6 @@ class UuidGenerator extends AbstractIdGenerator
      */
     public function generate(EntityManager $em, $entity)
     {
-        $conn = $em->getConnection();
-        $sql  = 'SELECT ' . $conn->getDatabasePlatform()->getGuidExpression();
-
-        return $conn->executeQuery($sql)->fetchOne();
+        throw new Exception();
     }
 }
