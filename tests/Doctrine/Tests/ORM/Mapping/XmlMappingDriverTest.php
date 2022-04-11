@@ -22,6 +22,8 @@ use Doctrine\Tests\Models\GH7316\GH7316Article;
 use Doctrine\Tests\Models\ValueObjects\Name;
 use Doctrine\Tests\Models\ValueObjects\Person;
 use DOMDocument;
+use Generator;
+use Throwable;
 
 use function array_filter;
 use function array_map;
@@ -30,6 +32,7 @@ use function glob;
 use function in_array;
 use function is_array;
 use function pathinfo;
+use function sprintf;
 
 use const DIRECTORY_SEPARATOR;
 use const PATHINFO_FILENAME;
@@ -207,15 +210,15 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
         try {
             $dom->load($xmlMappingFile);
             $dom->schemaValidate($xsdSchemaFile);
-        } catch (\Throwable $t) {
+        } catch (Throwable $t) {
             self::assertEquals($expectedExceptionMessage, $t->getMessage());
         }
     }
 
     /**
-     * @psalm-return \Generator<array<string, string>>
+     * @psalm-return Generator<array<string, string>>
      */
-    public static function dataInvalidSchema(): \Generator
+    public static function dataInvalidSchema(): Generator
     {
         $invalidMappingsData = [
             [
