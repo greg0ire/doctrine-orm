@@ -9,11 +9,13 @@ use Doctrine\ORM\Cache\Exception\CacheException;
 use Doctrine\ORM\Mapping\ClassMetadata;
 use Doctrine\ORM\Mapping\ClassMetadataFactory;
 use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\Persistence\Mapping\Driver\MappingDriver;
 use Doctrine\Persistence\Mapping\RuntimeReflectionService;
 use Doctrine\Tests\Models\DDC117\DDC117Translation;
 use Doctrine\Tests\Models\DDC3293\DDC3293User;
 use Doctrine\Tests\Models\DDC3293\DDC3293UserPrefixed;
+use Doctrine\Tests\Models\DDC889\DDC889Class;
 use Doctrine\Tests\Models\Generic\SerializationModel;
 use Doctrine\Tests\Models\GH7141\GH7141Article;
 use Doctrine\Tests\Models\GH7316\GH7316Article;
@@ -178,7 +180,11 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
     public static function dataValidSchema(): array
     {
         $list    = glob(__DIR__ . '/xml/*.xml');
-        $invalid = ['Doctrine.Tests.Models.DDC889.DDC889Class.dcm'];
+        $invalid = [
+            'Doctrine.Tests.Models.DDC889.DDC889Class.dcm',
+            'Doctrine.Tests.ORM.Mapping.UserIncorrectAttributes.dcm',
+            'Doctrine.Tests.ORM.Mapping.UserMissingAttributes.dcm',
+        ];
         assert(is_array($list));
 
         $list = array_filter($list, static function (string $item) use ($invalid): bool {
@@ -188,6 +194,47 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
         return array_map(static function (string $item) {
             return [$item];
         }, $list);
+    }
+
+    /**
+     * @dataProvider dataInvalidSchema
+     */
+    public function testValidateIncorrectXmlSchema(string $xmlMappingFile, string $expectedExceptionMessage): void
+    {
+        $xsdSchemaFile = __DIR__ . '/../../../../../doctrine-mapping.xsd';
+        $dom           = new DOMDocument();
+
+        try {
+            $dom->load($xmlMappingFile);
+            $dom->schemaValidate($xsdSchemaFile);
+        } catch (\Throwable $t) {
+            self::assertEquals($expectedExceptionMessage, $t->getMessage());
+        }
+    }
+
+    /**
+     * @psalm-return \Generator<array<string, string>>
+     */
+    public static function dataInvalidSchema(): \Generator
+    {
+        $invalidMappingsData = [
+            [
+                'file' => 'Doctrine.Tests.Models.DDC889.DDC889Class.dcm',
+                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}class\': This element is not expected.',
+            ],
+            [
+                'file' => 'Doctrine.Tests.ORM.Mapping.UserIncorrectAttributes.dcm',
+                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}field\', attribute \'field\': The attribute \'field\' is not allowed.',
+            ],
+            [
+                'file' => 'Doctrine.Tests.ORM.Mapping.UserMissingAttributes.dcm',
+                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}field\': The attribute \'name\' is required but missing.',
+            ],
+        ];
+
+        foreach ($invalidMappingsData as $data) {
+            yield [sprintf(__DIR__ . '/xml/%s.xml', $data['file']), $data['expected_exception']];
+        }
     }
 
     /**
@@ -226,9 +273,10 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
      */
     public function testInvalidEntityOrMappedSuperClassShouldMentionParentClasses(): void
     {
-        self::markTestSkipped(
-            'It is not even possible to create this situation with a valid XML mapping.'
-        );
+        $this->expectException(MappingException::class);
+        $this->expectExceptionMessage('libxml error: Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}class\': This element is not expected.');
+
+        $this->createClassMetadata(DDC889Class::class);
     }
 }
 
