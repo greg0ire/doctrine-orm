@@ -105,7 +105,7 @@ final class ORMSetup
         ?bool $isXsdValidationEnabled = false
     ): Configuration {
         $config = self::createConfiguration($isDevMode, $proxyDir, $cache);
-        $config->setMetadataDriverImpl(new XmlDriver($paths, $isXsdValidationEnabled));
+        $config->setMetadataDriverImpl(new XmlDriver($paths, XmlDriver::DEFAULT_FILE_EXTENSION, $isXsdValidationEnabled));
 
         return $config;
     }
