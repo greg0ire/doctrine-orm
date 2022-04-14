@@ -33,7 +33,11 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
 {
     protected function loadDriver(): MappingDriver
     {
-        return new XmlDriver(__DIR__ . DIRECTORY_SEPARATOR . 'xml');
+        return new XmlDriver(
+            __DIR__ . DIRECTORY_SEPARATOR . 'xml',
+            XmlDriver::DEFAULT_FILE_EXTENSION,
+            true
+        );
     }
 
     public function testClassTableInheritanceDiscriminatorMap(): void
