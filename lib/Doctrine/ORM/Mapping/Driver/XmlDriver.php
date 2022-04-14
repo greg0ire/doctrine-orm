@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Doctrine\ORM\Mapping\Driver;
 
 use Doctrine\Common\Collections\Criteria;
+use Doctrine\Deprecations\Deprecation;
 use Doctrine\ORM\Mapping\Builder\EntityListenerBuilder;
 use Doctrine\ORM\Mapping\ClassMetadata as Metadata;
 use Doctrine\ORM\Mapping\MappingException;
@@ -40,10 +41,15 @@ class XmlDriver extends FileDriver
 {
     public const DEFAULT_FILE_EXTENSION = '.dcm.xml';
 
+    /** @var bool */
+    private $isXsdValidationEnabled;
+
     /**
      * {@inheritDoc}
+     *
+     * @param bool $isXsdValidationEnabled
      */
-    public function __construct($locator, $fileExtension = self::DEFAULT_FILE_EXTENSION)
+    public function __construct($locator, $fileExtension = self::DEFAULT_FILE_EXTENSION, $isXsdValidationEnabled = false)
     {
         if (! extension_loaded('simplexml')) {
             throw new LogicException(sprintf(
@@ -51,6 +57,16 @@ class XmlDriver extends FileDriver
                 . ' Please configure PHP with SimpleXML or choose a different metadata driver.'
             ));
         }
+
+        if (! $isXsdValidationEnabled) {
+            Deprecation::trigger(
+                'doctrine/orm',
+                'https://github.com/doctrine/orm/pull/6728',
+                'Using XML mapping driver with XSD validation disabled is deprecated and will not be supported in Doctrine ORM 3.0.'
+            );
+        }
+
+        $this->isXsdValidationEnabled = $isXsdValidationEnabled;
 
         parent::__construct($locator, $fileExtension);
     }
@@ -969,6 +985,10 @@ class XmlDriver extends FileDriver
 
     private function validateMapping(string $file): void
     {
+        if (! $this->isXsdValidationEnabled) {
+            return;
+        }
+
         $backedUpErrorSetting = libxml_use_internal_errors(true);
 
         $document = new DOMDocument();
