@@ -16,26 +16,18 @@ use Doctrine\Tests\Models\DDC117\DDC117Translation;
 use Doctrine\Tests\Models\DDC3293\DDC3293User;
 use Doctrine\Tests\Models\DDC3293\DDC3293UserPrefixed;
 use Doctrine\Tests\Models\DDC889\DDC889Class;
+use Doctrine\Tests\Models\DDC889\DDC889Entity;
+use Doctrine\Tests\Models\DDC889\DDC889SuperClass;
 use Doctrine\Tests\Models\Generic\SerializationModel;
 use Doctrine\Tests\Models\GH7141\GH7141Article;
 use Doctrine\Tests\Models\GH7316\GH7316Article;
 use Doctrine\Tests\Models\ValueObjects\Name;
 use Doctrine\Tests\Models\ValueObjects\Person;
-use DOMDocument;
-use Generator;
 use Throwable;
 
-use function array_filter;
-use function array_map;
-use function assert;
-use function glob;
-use function in_array;
-use function is_array;
-use function pathinfo;
-use function sprintf;
+use function substr_count;
 
 use const DIRECTORY_SEPARATOR;
-use const PATHINFO_FILENAME;
 
 class XmlMappingDriverTest extends AbstractMappingDriverTest
 {
@@ -167,77 +159,88 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
      * @dataProvider dataValidSchema
      * @group DDC-2429
      */
-    public function testValidateXmlSchema(string $xmlMappingFile): void
-    {
-        $xsdSchemaFile = __DIR__ . '/../../../../../doctrine-mapping.xsd';
-        $dom           = new DOMDocument();
+    public function testValidateXmlSchema(
+        string $class,
+        string $tableName,
+        array $fieldNames,
+        array $associationNames
+    ): void {
+        $metadata = $this->createClassMetadata($class);
 
-        $dom->load($xmlMappingFile);
-
-        self::assertTrue($dom->schemaValidate($xsdSchemaFile));
+        $this->assertInstanceOf(ClassMetadata::class, $metadata);
+        $this->assertEquals($metadata->getTableName(), $tableName);
+        $this->assertEquals($metadata->getFieldNames(), $fieldNames);
+        $this->assertEquals($metadata->getAssociationNames(), $associationNames);
     }
 
     /**
-     * @psalm-return list<array{string}>
+     * @psalm-return []array{0: class-string, 1: string, 2: list<string>, 3: list<string>}
      */
     public static function dataValidSchema(): array
     {
-        $list    = glob(__DIR__ . '/xml/*.xml');
-        $invalid = [
-            'Doctrine.Tests.Models.DDC889.DDC889Class.dcm',
-            'Doctrine.Tests.ORM.Mapping.UserIncorrectAttributes.dcm',
-            'Doctrine.Tests.ORM.Mapping.UserMissingAttributes.dcm',
+        return [
+            [
+                User::class,
+                'cms_users',
+                ['name', 'email', 'version', 'id'],
+                ['address', 'phonenumbers', 'groups'],
+            ],
+            [
+                DDC889Entity::class,
+                'DDC889Entity',
+                [],
+                [],
+            ],
+            [
+                DDC889SuperClass::class,
+                'DDC889SuperClass',
+                ['name'],
+                [],
+            ],
         ];
-        assert(is_array($list));
-
-        $list = array_filter($list, static function (string $item) use ($invalid): bool {
-            return ! in_array(pathinfo($item, PATHINFO_FILENAME), $invalid, true);
-        });
-
-        return array_map(static function (string $item) {
-            return [$item];
-        }, $list);
     }
 
     /**
+     * @param array{0: class-string, 1: array<string, int>} $expectedExceptionOccurrences
+     *
      * @dataProvider dataInvalidSchema
      */
-    public function testValidateIncorrectXmlSchema(string $xmlMappingFile, string $expectedExceptionMessage): void
+    public function testValidateIncorrectXmlSchema(string $class, array $expectedExceptionOccurrences): void
     {
-        $xsdSchemaFile = __DIR__ . '/../../../../../doctrine-mapping.xsd';
-        $dom           = new DOMDocument();
-
         try {
-            $dom->load($xmlMappingFile);
-            $dom->schemaValidate($xsdSchemaFile);
-        } catch (Throwable $t) {
-            self::assertEquals($expectedExceptionMessage, $t->getMessage());
+            $this->createClassMetadata($class);
+        } catch (Throwable $throwable) {
+            $this->assertInstanceOf(MappingException::class, $throwable);
+
+            foreach ($expectedExceptionOccurrences as $exceptionContent => $occurrencesCount) {
+                $this->assertEquals($occurrencesCount, substr_count($throwable->getMessage(), $exceptionContent));
+            }
         }
     }
 
     /**
-     * @psalm-return Generator<array<string, string>>
+     * @psalm-return []array{0: class-string, 1: array<string, int>}
      */
-    public static function dataInvalidSchema(): Generator
+    public static function dataInvalidSchema(): array
     {
-        $invalidMappingsData = [
+        return [
             [
-                'file' => 'Doctrine.Tests.Models.DDC889.DDC889Class.dcm',
-                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}class\': This element is not expected.',
+                DDC889Class::class,
+                ['This element is not expected' => 1],
             ],
             [
-                'file' => 'Doctrine.Tests.ORM.Mapping.UserIncorrectAttributes.dcm',
-                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}field\', attribute \'field\': The attribute \'field\' is not allowed.',
+                UserIncorrectAttributes::class,
+                [
+                    'attribute \'field\': The attribute \'field\' is not allowed' => 2,
+                    'The attribute \'name\' is required but missing' => 2,
+                    'attribute \'fieldName\': The attribute \'fieldName\' is not allowed' => 1,
+                ],
             ],
             [
-                'file' => 'Doctrine.Tests.ORM.Mapping.UserMissingAttributes.dcm',
-                'expected_exception' => 'DOMDocument::schemaValidate(): Element \'{http://doctrine-project.org/schemas/orm/doctrine-mapping}field\': The attribute \'name\' is required but missing.',
+                UserMissingAttributes::class,
+                ['The attribute \'name\' is required but missing' => 1],
             ],
         ];
-
-        foreach ($invalidMappingsData as $data) {
-            yield [sprintf(__DIR__ . '/xml/%s.xml', $data['file']), $data['expected_exception']];
-        }
     }
 
     /**
