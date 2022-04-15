@@ -102,7 +102,7 @@ final class ORMSetup
         bool $isDevMode = false,
         ?string $proxyDir = null,
         ?CacheItemPoolInterface $cache = null,
-        ?bool $isXsdValidationEnabled = false
+        bool $isXsdValidationEnabled = false
     ): Configuration {
         $config = self::createConfiguration($isDevMode, $proxyDir, $cache);
         $config->setMetadataDriverImpl(new XmlDriver($paths, XmlDriver::DEFAULT_FILE_EXTENSION, $isXsdValidationEnabled));
