@@ -998,10 +998,10 @@ class XmlDriver extends FileDriver
 
         $backedUpErrorSetting = libxml_use_internal_errors(true);
 
-        $document = new DOMDocument();
-        $document->load($file);
-
         try {
+            $document = new DOMDocument();
+            $document->load($file);
+
             if (! $document->schemaValidate(__DIR__ . '/../../../../../doctrine-mapping.xsd')) {
                 throw MappingException::fromLibXmlErrors(libxml_get_errors());
             }

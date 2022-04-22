@@ -1011,7 +1011,7 @@ EXCEPTION
     {
         $formatter = static function (LibXMLError $error): string {
             return sprintf(
-                'libxml error: %s%s:%d',
+                'libxml error: %s in %s at line %d',
                 $error->message,
                 $error->file,
                 $error->line

@@ -23,7 +23,6 @@ use Doctrine\Tests\Models\GH7141\GH7141Article;
 use Doctrine\Tests\Models\GH7316\GH7316Article;
 use Doctrine\Tests\Models\ValueObjects\Name;
 use Doctrine\Tests\Models\ValueObjects\Person;
-use Throwable;
 
 use function substr_count;
 
@@ -213,11 +212,11 @@ class XmlMappingDriverTest extends AbstractMappingDriverTest
     {
         try {
             $this->createClassMetadata($class);
-        } catch (Throwable $throwable) {
-            $this->assertInstanceOf(MappingException::class, $throwable);
 
+            $this->fail('XML schema validation should throw a MappingException');
+        } catch (MappingException $exception) {
             foreach ($expectedExceptionOccurrences as $exceptionContent => $occurrencesCount) {
-                $this->assertEquals($occurrencesCount, substr_count($throwable->getMessage(), $exceptionContent));
+                $this->assertEquals($occurrencesCount, substr_count($exception->getMessage(), $exceptionContent));
             }
         }
     }
