@@ -1967,11 +1967,6 @@
       <code>$sqlWalker</code>
     </ParamNameMismatch>
   </file>
-  <file src="lib/Doctrine/ORM/Query/Exec/AbstractSqlExecutor.php">
-    <PossiblyNullPropertyAssignmentValue>
-      <code>null</code>
-    </PossiblyNullPropertyAssignmentValue>
-  </file>
   <file src="lib/Doctrine/ORM/Query/Exec/MultiTableDeleteExecutor.php">
     <InvalidReturnStatement>
       <code>$numDeleted</code>
@@ -1983,7 +1978,6 @@
       <code>$this-&gt;_sqlStatements</code>
     </PossiblyInvalidIterator>
     <PropertyNotSetInConstructor>
-      <code>MultiTableDeleteExecutor</code>
       <code>MultiTableDeleteExecutor</code>
     </PropertyNotSetInConstructor>
     <UninitializedProperty>
@@ -2002,7 +1996,6 @@
     </PossiblyInvalidIterator>
     <PropertyNotSetInConstructor>
       <code>MultiTableUpdateExecutor</code>
-      <code>MultiTableUpdateExecutor</code>
     </PropertyNotSetInConstructor>
     <PropertyTypeCoercion>
       <code>$this-&gt;_sqlStatements</code>
@@ -2015,9 +2008,6 @@
     <PossiblyInvalidArgument>
       <code>$this-&gt;_sqlStatements</code>
     </PossiblyInvalidArgument>
-    <PropertyNotSetInConstructor>
-      <code>SingleSelectExecutor</code>
-    </PropertyNotSetInConstructor>
   </file>
   <file src="lib/Doctrine/ORM/Query/Exec/SingleTableDeleteUpdateExecutor.php">
     <InvalidReturnStatement>
@@ -2030,7 +2020,6 @@
       <code>$this-&gt;_sqlStatements</code>
     </PossiblyInvalidArgument>
     <PropertyNotSetInConstructor>
-      <code>SingleTableDeleteUpdateExecutor</code>
       <code>SingleTableDeleteUpdateExecutor</code>
     </PropertyNotSetInConstructor>
   </file>

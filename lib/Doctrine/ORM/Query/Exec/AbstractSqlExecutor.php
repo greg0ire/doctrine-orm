@@ -21,7 +21,7 @@ abstract class AbstractSqlExecutor
     /** @var list<string>|string */
     protected $_sqlStatements;
 
-    /** @var QueryCacheProfile */
+    /** @var QueryCacheProfile|null */
     protected $queryCacheProfile;
 
     /**
