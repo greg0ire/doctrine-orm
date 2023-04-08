@@ -302,12 +302,12 @@ class DefaultQueryCache implements QueryCache
      */
     private function storeAssociationCache(QueryCacheKey $key, AssociationMapping $assoc, mixed $assocValue): array|null
     {
-        $assocPersister = $this->uow->getEntityPersister($assoc['targetEntity']);
+        $assocPersister = $this->uow->getEntityPersister($assoc->{'targetEntity'});
         $assocMetadata  = $assocPersister->getClassMetadata();
         $assocRegion    = $assocPersister->getCacheRegion();
 
         // Handle *-to-one associations
-        if ($assoc['type'] & ClassMetadata::TO_ONE) {
+        if ($assoc->type() & ClassMetadata::TO_ONE) {
             $assocIdentifier = $this->uow->getEntityIdentifier($assocValue);
             $entityKey       = new EntityCacheKey($assocMetadata->rootEntityName, $assocIdentifier);
 
@@ -321,7 +321,7 @@ class DefaultQueryCache implements QueryCache
             return [
                 'targetEntity'  => $assocMetadata->rootEntityName,
                 'identifier'    => $assocIdentifier,
-                'type'          => $assoc['type'],
+                'type'          => $assoc->type(),
             ];
         }
 
@@ -344,7 +344,7 @@ class DefaultQueryCache implements QueryCache
 
         return [
             'targetEntity'  => $assocMetadata->rootEntityName,
-            'type'          => $assoc['type'],
+            'type'          => $assoc->type(),
             'list'          => $list,
         ];
     }

@@ -340,7 +340,7 @@ class SqlWalker
             $dqlAlias = $selectedClass['dqlAlias'];
             $qComp    = $this->queryComponents[$dqlAlias];
 
-            if (! isset($qComp['relation']['orderBy'])) {
+            if (! isset($qComp['relation']->{'orderBy'})) {
                 continue;
             }
 
@@ -654,7 +654,7 @@ class SqlWalker
                     $class->name,
                     $dqlAlias,
                     $this->queryComponents[$dqlAlias]['parent'],
-                    $this->queryComponents[$dqlAlias]['relation']['fieldName'],
+                    $this->queryComponents[$dqlAlias]['relation']->{'fieldName'},
                 );
             }
 
@@ -887,18 +887,18 @@ class SqlWalker
 
         $relation = $this->queryComponents[$joinedDqlAlias]['relation'] ?? null;
         assert($relation !== null);
-        $targetClass     = $this->em->getClassMetadata($relation['targetEntity']);
-        $sourceClass     = $this->em->getClassMetadata($relation['sourceEntity']);
+        $targetClass     = $this->em->getClassMetadata($relation->{'targetEntity'});
+        $sourceClass     = $this->em->getClassMetadata($relation->{'sourceEntity'});
         $targetTableName = $this->quoteStrategy->getTableName($targetClass, $this->platform);
 
         $targetTableAlias = $this->getSQLTableAlias($targetClass->getTableName(), $joinedDqlAlias);
         $sourceTableAlias = $this->getSQLTableAlias($sourceClass->getTableName(), $associationPathExpression->identificationVariable);
 
         // Ensure we got the owning side, since it has all mapping info
-        $assoc = ! $relation['isOwningSide'] ? $targetClass->associationMappings[$relation['mappedBy']] : $relation;
+        $assoc = ! $relation->isOwningSide() ? $targetClass->associationMappings[$relation->{'mappedBy'}] : $relation;
 
         if ($this->query->getHint(Query::HINT_INTERNAL_ITERATION) === true && (! $this->query->getHint(self::HINT_DISTINCT) || isset($this->selectedClasses[$joinedDqlAlias]))) {
-            if ($relation['type'] === ClassMetadata::ONE_TO_MANY || $relation['type'] === ClassMetadata::MANY_TO_MANY) {
+            if ($relation->type() === ClassMetadata::ONE_TO_MANY || $relation->type() === ClassMetadata::MANY_TO_MANY) {
                 throw QueryException::iterateWithFetchJoinNotAllowed($assoc);
             }
         }
@@ -912,11 +912,11 @@ class SqlWalker
             case $assoc->isToOne():
                 $conditions = [];
 
-                foreach ($assoc['joinColumns'] as $joinColumn) {
+                foreach ($assoc->{'joinColumns'} as $joinColumn) {
                     $quotedSourceColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $targetClass, $this->platform);
                     $quotedTargetColumn = $this->quoteStrategy->getReferencedJoinColumnName($joinColumn, $targetClass, $this->platform);
 
-                    if ($relation['isOwningSide']) {
+                    if ($relation->isOwningSide()) {
                         $conditions[] = $sourceTableAlias . '.' . $quotedSourceColumn . ' = ' . $targetTableAlias . '.' . $quotedTargetColumn;
 
                         continue;
@@ -945,16 +945,16 @@ class SqlWalker
                 ];
                 break;
 
-            case $assoc['type'] === ClassMetadata::MANY_TO_MANY:
+            case $assoc->type() === ClassMetadata::MANY_TO_MANY:
                 // Join relation table
-                $joinTable      = $assoc['joinTable'];
+                $joinTable      = $assoc->{'joinTable'};
                 $joinTableAlias = $this->getSQLTableAlias($joinTable['name'], $joinedDqlAlias);
                 $joinTableName  = $this->quoteStrategy->getJoinTableName($assoc, $sourceClass, $this->platform);
 
                 $conditions      = [];
-                $relationColumns = $relation['isOwningSide']
-                    ? $assoc['joinTable']['joinColumns']
-                    : $assoc['joinTable']['inverseJoinColumns'];
+                $relationColumns = $relation->isOwningSide()
+                    ? $assoc->{'joinTable'}['joinColumns']
+                    : $assoc->{'joinTable'}['inverseJoinColumns'];
 
                 foreach ($relationColumns as $joinColumn) {
                     $quotedSourceColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $targetClass, $this->platform);
@@ -969,9 +969,9 @@ class SqlWalker
                 $sql .= $joinType === AST\Join::JOIN_TYPE_LEFT || $joinType === AST\Join::JOIN_TYPE_LEFTOUTER ? ' LEFT JOIN ' : ' INNER JOIN ';
 
                 $conditions      = [];
-                $relationColumns = $relation['isOwningSide']
-                    ? $assoc['joinTable']['inverseJoinColumns']
-                    : $assoc['joinTable']['joinColumns'];
+                $relationColumns = $relation->isOwningSide()
+                    ? $assoc->{'joinTable'}['inverseJoinColumns']
+                    : $assoc->{'joinTable'}['joinColumns'];
 
                 foreach ($relationColumns as $joinColumn) {
                     $quotedSourceColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $targetClass, $this->platform);
@@ -1027,8 +1027,8 @@ class SqlWalker
         if ($indexBy) {
             // For Many-To-One or One-To-One associations this obviously makes no sense, but is ignored silently.
             $this->walkIndexBy($indexBy);
-        } elseif (isset($relation['indexBy'])) {
-            $this->rsm->addIndexBy($joinedDqlAlias, $relation['indexBy']);
+        } elseif (isset($relation->{'indexBy'})) {
+            $this->rsm->addIndexBy($joinedDqlAlias, $relation->{'indexBy'});
         }
 
         return $sql;

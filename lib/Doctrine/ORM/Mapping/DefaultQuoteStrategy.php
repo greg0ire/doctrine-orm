@@ -79,13 +79,13 @@ class DefaultQuoteStrategy implements QuoteStrategy
     ): string {
         $schema = '';
 
-        if (isset($association['joinTable']['schema'])) {
-            $schema = $association['joinTable']['schema'] . '.';
+        if (isset($association->{'joinTable'}['schema'])) {
+            $schema = $association->{'joinTable'}['schema'] . '.';
         }
 
-        $tableName = $association['joinTable']['name'];
+        $tableName = $association->{'joinTable'}['name'];
 
-        if (isset($association['joinTable']['quoted'])) {
+        if (isset($association->{'joinTable'}['quoted'])) {
             $tableName = $platform->quoteIdentifier($tableName);
         }
 

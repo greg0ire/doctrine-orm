@@ -1906,11 +1906,11 @@ class ClassMetadata implements PersistenceClassMetadata, Stringable
      */
     public function addInheritedAssociationMapping(AssociationMapping $mapping/*, $owningClassName = null*/): void
     {
-        if (isset($this->associationMappings[$mapping['fieldName']])) {
-            throw MappingException::duplicateAssociationMapping($this->name, $mapping['fieldName']);
+        if (isset($this->associationMappings[$mapping->{'fieldName'}])) {
+            throw MappingException::duplicateAssociationMapping($this->name, $mapping->{'fieldName'});
         }
 
-        $this->associationMappings[$mapping['fieldName']] = $mapping;
+        $this->associationMappings[$mapping->{'fieldName'}] = $mapping;
     }
 
     /**
@@ -1988,7 +1988,7 @@ class ClassMetadata implements PersistenceClassMetadata, Stringable
      */
     protected function _storeAssociationMapping(AssociationMapping $assocMapping): void
     {
-        $sourceFieldName = $assocMapping['fieldName'];
+        $sourceFieldName = $assocMapping->{'fieldName'};
 
         $this->assertFieldNotMapped($sourceFieldName);
 

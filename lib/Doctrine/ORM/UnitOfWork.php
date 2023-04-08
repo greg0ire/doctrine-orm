@@ -806,7 +806,7 @@ class UnitOfWork implements PropertyChangedListener
         // for transient (new) entities, recursively. ("Persistence by reachability")
         // Unwrap. Uninitialized collections will simply be empty.
         $unwrappedValue = $assoc->isToOne() ? [$value] : $value->unwrap();
-        $targetClass    = $this->em->getClassMetadata($assoc['targetEntity']);
+        $targetClass    = $this->em->getClassMetadata($assoc->{'targetEntity'});
 
         foreach ($unwrappedValue as $key => $entry) {
             if (! ($entry instanceof $targetClass->name)) {
@@ -815,18 +815,18 @@ class UnitOfWork implements PropertyChangedListener
 
             $state = $this->getEntityState($entry, self::STATE_NEW);
 
-            if (! ($entry instanceof $assoc['targetEntity'])) {
+            if (! ($entry instanceof $assoc->{'targetEntity'})) {
                 throw UnexpectedAssociationValue::create(
-                    $assoc['sourceEntity'],
-                    $assoc['fieldName'],
+                    $assoc->{'sourceEntity'},
+                    $assoc->{'fieldName'},
                     get_debug_type($entry),
-                    $assoc['targetEntity'],
+                    $assoc->{'targetEntity'},
                 );
             }
 
             switch ($state) {
                 case self::STATE_NEW:
-                    if (! $assoc['isCascadePersist']) {
+                    if (! $assoc->isCascadePersist()) {
                         /*
                          * For now just record the details, because this may
                          * not be an issue if we later discover another pathway
@@ -2503,9 +2503,9 @@ class UnitOfWork implements PropertyChangedListener
     public function loadCollection(PersistentCollection $collection): void
     {
         $assoc     = $collection->getMapping();
-        $persister = $this->getEntityPersister($assoc['targetEntity']);
+        $persister = $this->getEntityPersister($assoc->{'targetEntity'});
 
-        switch ($assoc['type']) {
+        switch ($assoc->type()) {
             case ClassMetadata::ONE_TO_MANY:
                 $persister->loadOneToManyCollection($assoc, $collection->getOwner(), $collection);
                 break;
@@ -2680,19 +2680,19 @@ class UnitOfWork implements PropertyChangedListener
     /** Gets a collection persister for a collection-valued association. */
     public function getCollectionPersister(AssociationMapping $association): CollectionPersister
     {
-        $role = isset($association['cache'])
-            ? $association['sourceEntity'] . '::' . $association['fieldName']
-            : $association['type'];
+        $role = isset($association->{'cache'})
+            ? $association->{'sourceEntity'} . '::' . $association->{'fieldName'}
+            : $association->type();
 
         if (isset($this->collectionPersisters[$role])) {
             return $this->collectionPersisters[$role];
         }
 
-        $persister = $association['type'] === ClassMetadata::ONE_TO_MANY
+        $persister = $association->type() === ClassMetadata::ONE_TO_MANY
             ? new OneToManyPersister($this->em)
             : new ManyToManyPersister($this->em);
 
-        if ($this->hasCache && isset($association['cache'])) {
+        if ($this->hasCache && isset($association->{'cache'})) {
             $persister = $this->em->getConfiguration()
                 ->getSecondLevelCacheConfiguration()
                 ->getCacheFactory()

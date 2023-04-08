@@ -732,41 +732,41 @@ class BasicEntityPersister implements EntityPersister
      */
     public function loadOneToOneEntity(AssociationMapping $assoc, object $sourceEntity, array $identifier = []): object|null
     {
-        $foundEntity = $this->em->getUnitOfWork()->tryGetById($identifier, $assoc['targetEntity']);
+        $foundEntity = $this->em->getUnitOfWork()->tryGetById($identifier, $assoc->{'targetEntity'});
         if ($foundEntity !== false) {
             return $foundEntity;
         }
 
-        $targetClass = $this->em->getClassMetadata($assoc['targetEntity']);
+        $targetClass = $this->em->getClassMetadata($assoc->{'targetEntity'});
 
-        if ($assoc['isOwningSide']) {
-            $isInverseSingleValued = $assoc['inversedBy'] && ! $targetClass->isCollectionValuedAssociation($assoc['inversedBy']);
+        if ($assoc->isOwningSide()) {
+            $isInverseSingleValued = $assoc->{'inversedBy'} && ! $targetClass->isCollectionValuedAssociation($assoc->{'inversedBy'});
 
             // Mark inverse side as fetched in the hints, otherwise the UoW would
             // try to load it in a separate query (remember: to-one inverse sides can not be lazy).
             $hints = [];
 
             if ($isInverseSingleValued) {
-                $hints['fetched']['r'][$assoc['inversedBy']] = true;
+                $hints['fetched']['r'][$assoc->{'inversedBy'}] = true;
             }
 
             $targetEntity = $this->load($identifier, null, $assoc, $hints);
 
             // Complete bidirectional association, if necessary
             if ($targetEntity !== null && $isInverseSingleValued) {
-                $targetClass->reflFields[$assoc['inversedBy']]->setValue($targetEntity, $sourceEntity);
+                $targetClass->reflFields[$assoc->{'inversedBy'}]->setValue($targetEntity, $sourceEntity);
             }
 
             return $targetEntity;
         }
 
-        $sourceClass = $this->em->getClassMetadata($assoc['sourceEntity']);
-        $owningAssoc = $targetClass->getAssociationMapping($assoc['mappedBy']);
+        $sourceClass = $this->em->getClassMetadata($assoc->{'sourceEntity'});
+        $owningAssoc = $targetClass->getAssociationMapping($assoc->{'mappedBy'});
 
         $computedIdentifier = [];
 
         // TRICKY: since the association is specular source and target are flipped
-        foreach ($owningAssoc['targetToSourceKeyColumns'] as $sourceKeyColumn => $targetKeyColumn) {
+        foreach ($owningAssoc->{'targetToSourceKeyColumns'} as $sourceKeyColumn => $targetKeyColumn) {
             if (! isset($sourceClass->fieldNames[$sourceKeyColumn])) {
                 throw MappingException::joinColumnMustPointToMappedField(
                     $sourceClass->name,
@@ -781,7 +781,7 @@ class BasicEntityPersister implements EntityPersister
         $targetEntity = $this->load($computedIdentifier, null, $assoc);
 
         if ($targetEntity !== null) {
-            $targetClass->setFieldValue($targetEntity, $assoc['mappedBy'], $sourceEntity);
+            $targetClass->setFieldValue($targetEntity, $assoc->{'mappedBy'}, $sourceEntity);
         }
 
         return $targetEntity;
@@ -906,9 +906,9 @@ class BasicEntityPersister implements EntityPersister
         $rsm   = $this->currentPersisterContext->rsm;
         $hints = [UnitOfWork::HINT_DEFEREAGERLOAD => true];
 
-        if (isset($assoc['indexBy'])) {
+        if (isset($assoc->{'indexBy'})) {
             $rsm = clone $this->currentPersisterContext->rsm; // this is necessary because the "default rsm" should be changed.
-            $rsm->addIndexBy('r', $assoc['indexBy']);
+            $rsm->addIndexBy('r', $assoc->{'indexBy'});
         }
 
         return $this->em->newHydrator(Query::HYDRATE_OBJECT)->hydrateAll($stmt, $rsm, $hints);
@@ -930,9 +930,9 @@ class BasicEntityPersister implements EntityPersister
             'collection' => $coll,
         ];
 
-        if (isset($assoc['indexBy'])) {
+        if (isset($assoc->{'indexBy'})) {
             $rsm = clone $this->currentPersisterContext->rsm; // this is necessary because the "default rsm" should be changed.
-            $rsm->addIndexBy('r', $assoc['indexBy']);
+            $rsm->addIndexBy('r', $assoc->{'indexBy'});
         }
 
         return $this->em->newHydrator(Query::HYDRATE_OBJECT)->hydrateAll($stmt, $rsm, $hints);
@@ -957,20 +957,20 @@ class BasicEntityPersister implements EntityPersister
     ): Result {
         $this->switchPersisterContext($offset, $limit);
 
-        $sourceClass = $this->em->getClassMetadata($assoc['sourceEntity']);
+        $sourceClass = $this->em->getClassMetadata($assoc->{'sourceEntity'});
         $class       = $sourceClass;
         $association = $assoc;
         $criteria    = [];
         $parameters  = [];
 
-        if (! $assoc['isOwningSide']) {
-            $class       = $this->em->getClassMetadata($assoc['targetEntity']);
-            $association = $class->associationMappings[$assoc['mappedBy']];
+        if (! $assoc->isOwningSide()) {
+            $class       = $this->em->getClassMetadata($assoc->{'targetEntity'});
+            $association = $class->associationMappings[$assoc->{'mappedBy'}];
         }
 
-        $joinColumns = $assoc['isOwningSide']
-            ? $association['joinTable']['joinColumns']
-            : $association['joinTable']['inverseJoinColumns'];
+        $joinColumns = $assoc->isOwningSide()
+            ? $association->{'joinTable'}['joinColumns']
+            : $association->{'joinTable'}['inverseJoinColumns'];
 
         $quotedJoinTable = $this->quoteStrategy->getJoinTableName($association, $class, $this->platform);
 
@@ -1030,12 +1030,12 @@ class BasicEntityPersister implements EntityPersister
         $joinSql    = '';
         $orderBySql = '';
 
-        if ($assoc !== null && $assoc['type'] === ClassMetadata::MANY_TO_MANY) {
+        if ($assoc !== null && $assoc->type() === ClassMetadata::MANY_TO_MANY) {
             $joinSql = $this->getSelectManyToManyJoinSQL($assoc);
         }
 
-        if (isset($assoc['orderBy'])) {
-            $orderBy = $assoc['orderBy'];
+        if (isset($assoc->{'orderBy'})) {
+            $orderBy = $assoc->{'orderBy'};
         }
 
         if ($orderBy) {
@@ -1239,13 +1239,13 @@ class BasicEntityPersister implements EntityPersister
             $joinTableName  = $this->quoteStrategy->getTableName($eagerEntity, $this->platform);
 
             if ($assoc['isOwningSide']) {
-                $tableAlias                                    = $this->getSQLTableAlias($association['targetEntity'], $assocAlias);
-                $this->currentPersisterContext->selectJoinSql .= ' ' . $this->getJoinSQLForJoinColumns($association['joinColumns']);
+                $tableAlias                                    = $this->getSQLTableAlias($association->{'targetEntity'}, $assocAlias);
+                $this->currentPersisterContext->selectJoinSql .= ' ' . $this->getJoinSQLForJoinColumns($association->{'joinColumns'});
 
-                foreach ($association['joinColumns'] as $joinColumn) {
+                foreach ($association->{'joinColumns'} as $joinColumn) {
                     $sourceCol       = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
                     $targetCol       = $this->quoteStrategy->getReferencedJoinColumnName($joinColumn, $this->class, $this->platform);
-                    $joinCondition[] = $this->getSQLTableAlias($association['sourceEntity'])
+                    $joinCondition[] = $this->getSQLTableAlias($association->{'sourceEntity'})
                                         . '.' . $sourceCol . ' = ' . $tableAlias . '.' . $targetCol;
                 }
 
@@ -1257,12 +1257,12 @@ class BasicEntityPersister implements EntityPersister
             } else {
                 $this->currentPersisterContext->selectJoinSql .= ' LEFT JOIN';
 
-                foreach ($association['joinColumns'] as $joinColumn) {
+                foreach ($association->{'joinColumns'} as $joinColumn) {
                     $sourceCol = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
                     $targetCol = $this->quoteStrategy->getReferencedJoinColumnName($joinColumn, $this->class, $this->platform);
 
-                    $joinCondition[] = $this->getSQLTableAlias($association['sourceEntity'], $assocAlias) . '.' . $sourceCol . ' = '
-                        . $this->getSQLTableAlias($association['targetEntity']) . '.' . $targetCol;
+                    $joinCondition[] = $this->getSQLTableAlias($association->{'sourceEntity'}, $assocAlias) . '.' . $sourceCol . ' = '
+                        . $this->getSQLTableAlias($association->{'targetEntity'}) . '.' . $targetCol;
                 }
             }
 
@@ -1287,11 +1287,11 @@ class BasicEntityPersister implements EntityPersister
         }
 
         $columnList    = [];
-        $targetClass   = $this->em->getClassMetadata($assoc['targetEntity']);
-        $isIdentifier  = isset($assoc['id']) && $assoc['id'] === true;
+        $targetClass   = $this->em->getClassMetadata($assoc->{'targetEntity'});
+        $isIdentifier  = isset($assoc->{'id'}) && $assoc->{'id'} === true;
         $sqlTableAlias = $this->getSQLTableAlias($class->name, ($alias === 'r' ? '' : $alias));
 
-        foreach ($assoc['joinColumns'] as $joinColumn) {
+        foreach ($assoc->{'joinColumns'} as $joinColumn) {
             $quotedColumn     = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
             $resultColumnName = $this->getSQLColumnAlias($joinColumn['name']);
             $type             = PersisterHelper::getTypeOfColumn($joinColumn['referencedColumnName'], $targetClass, $this->em);
@@ -1314,15 +1314,15 @@ class BasicEntityPersister implements EntityPersister
         $association      = $manyToMany;
         $sourceTableAlias = $this->getSQLTableAlias($this->class->name);
 
-        if (! $manyToMany['isOwningSide']) {
-            $targetEntity = $this->em->getClassMetadata($manyToMany['targetEntity']);
-            $association  = $targetEntity->associationMappings[$manyToMany['mappedBy']];
+        if (! $manyToMany->isOwningSide()) {
+            $targetEntity = $this->em->getClassMetadata($manyToMany->{'targetEntity'});
+            $association  = $targetEntity->associationMappings[$manyToMany->{'mappedBy'}];
         }
 
         $joinTableName = $this->quoteStrategy->getJoinTableName($association, $this->class, $this->platform);
-        $joinColumns   = $manyToMany['isOwningSide']
-            ? $association['joinTable']['inverseJoinColumns']
-            : $association['joinTable']['joinColumns'];
+        $joinColumns   = $manyToMany->isOwningSide()
+            ? $association->{'joinTable'}['inverseJoinColumns']
+            : $association->{'joinTable'}['joinColumns'];
 
         foreach ($joinColumns as $joinColumn) {
             $quotedSourceColumn = $this->quoteStrategy->getJoinColumnName($joinColumn, $this->class, $this->platform);
@@ -1626,9 +1626,9 @@ class BasicEntityPersister implements EntityPersister
 
                 $joinTableName = $this->quoteStrategy->getJoinTableName($association, $class, $this->platform);
                 assert($assoc !== null);
-                $joinColumns = $assoc['isOwningSide']
-                    ? $association['joinTable']['joinColumns']
-                    : $association['joinTable']['inverseJoinColumns'];
+                $joinColumns = $assoc->isOwningSide()
+                    ? $association->{'joinTable'}['joinColumns']
+                    : $association->{'joinTable'}['inverseJoinColumns'];
 
                 foreach ($joinColumns as $joinColumn) {
                     $columns[] = $joinTableName . '.' . $this->quoteStrategy->getJoinColumnName($joinColumn, $class, $this->platform);
@@ -1719,8 +1719,8 @@ class BasicEntityPersister implements EntityPersister
 
         $criteria    = [];
         $parameters  = [];
-        $owningAssoc = $this->class->associationMappings[$assoc['mappedBy']];
-        $sourceClass = $this->em->getClassMetadata($assoc['sourceEntity']);
+        $owningAssoc = $this->class->associationMappings[$assoc->{'mappedBy'}];
+        $sourceClass = $this->em->getClassMetadata($assoc->{'sourceEntity'});
         $tableAlias  = $this->getSQLTableAlias($owningAssoc['inherited'] ?? $this->class->name);
 
         foreach ($owningAssoc['targetToSourceKeyColumns'] as $sourceKeyColumn => $targetKeyColumn) {

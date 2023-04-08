@@ -154,7 +154,7 @@ class SchemaTool
                 if ($class->hasField($fieldName)) {
                     $columns[] = $this->quoteStrategy->getColumnName($fieldName, $class, $this->platform);
                 } elseif ($class->hasAssociation($fieldName)) {
-                    foreach ($class->getAssociationMapping($fieldName)['joinColumns'] as $joinColumn) {
+                    foreach ($class->getAssociationMapping($fieldName)->{'joinColumns'} as $joinColumn) {
                         $columns[] = $this->quoteStrategy->getJoinColumnName($joinColumn, $class, $this->platform);
                     }
                 }
@@ -556,7 +556,7 @@ class SchemaTool
                 );
             } elseif ($mapping instanceof ManyToManyOwningSideMapping) {
                 // create join table
-                $joinTable = $mapping['joinTable'];
+                $joinTable = $mapping->{'joinTable'};
 
                 $theJoinTable = $schema->createTable(
                     $this->quoteStrategy->getJoinTableName($mapping, $foreignClass, $this->platform),
@@ -671,8 +671,8 @@ class SchemaTool
             if (! $definingClass) {
                 throw MissingColumnException::fromColumnSourceAndTarget(
                     $joinColumn['referencedColumnName'],
-                    $mapping['sourceEntity'],
-                    $mapping['targetEntity'],
+                    $mapping->{'sourceEntity'},
+                    $mapping->{'targetEntity'},
                 );
             }
 

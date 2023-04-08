@@ -544,9 +544,9 @@ abstract class AbstractEntityPersister implements CachedEntityPersister
     /** @param array<string, mixed> $ownerId */
     protected function buildCollectionCacheKey(AssociationMapping $association, array $ownerId): CollectionCacheKey
     {
-        $metadata = $this->metadataFactory->getMetadataFor($association['sourceEntity']);
+        $metadata = $this->metadataFactory->getMetadataFor($association->{'sourceEntity'});
         assert($metadata instanceof ClassMetadata);
 
-        return new CollectionCacheKey($metadata->rootEntityName, $association['fieldName'], $ownerId);
+        return new CollectionCacheKey($metadata->rootEntityName, $association->{'fieldName'}, $ownerId);
     }
 }
