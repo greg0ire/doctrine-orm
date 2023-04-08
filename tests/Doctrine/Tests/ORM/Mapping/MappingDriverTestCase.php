@@ -279,8 +279,8 @@ abstract class MappingDriverTestCase extends OrmTestCase
         self::assertEquals('boolean', $class->getTypeOfField('boolean'));
         self::assertEquals('float', $class->getTypeOfField('float'));
 
-        self::assertEquals(CmsEmail::class, $class->getAssociationMapping('email')->{'targetEntity'});
-        self::assertEquals(CmsEmail::class, $class->getAssociationMapping('mainEmail')->{'targetEntity'});
+        self::assertEquals(CmsEmail::class, $class->getAssociationMapping('email')->targetEntity);
+        self::assertEquals(CmsEmail::class, $class->getAssociationMapping('mainEmail')->targetEntity);
         self::assertEquals(Contact::class, $class->embeddedClasses['contact']['class']);
     }
 

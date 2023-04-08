@@ -36,7 +36,7 @@ class NonStrictReadWriteCachedCollectionPersister extends AbstractCollectionPers
     public function delete(PersistentCollection $collection): void
     {
         $ownerId = $this->uow->getEntityIdentifier($collection->getOwner());
-        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->{'fieldName'}, $ownerId);
+        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->fieldName, $ownerId);
 
         $this->persister->delete($collection);
 
@@ -53,10 +53,10 @@ class NonStrictReadWriteCachedCollectionPersister extends AbstractCollectionPers
         }
 
         $ownerId = $this->uow->getEntityIdentifier($collection->getOwner());
-        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->{'fieldName'}, $ownerId);
+        $key     = new CollectionCacheKey($this->sourceEntity->rootEntityName, $this->association->fieldName, $ownerId);
 
        // Invalidate non initialized collections OR ordered collection
-        if ($isDirty && ! $isInitialized || isset($this->association->{'orderBy'})) {
+        if ($isDirty && ! $isInitialized || isset($this->association->orderBy)) {
             $this->persister->update($collection);
 
             $this->queuedCache['delete'][spl_object_id($collection)] = $key;
