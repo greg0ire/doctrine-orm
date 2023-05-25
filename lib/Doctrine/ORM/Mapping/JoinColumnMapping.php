@@ -13,7 +13,7 @@ final class JoinColumnMapping implements ArrayAccess
 {
     use ArrayAccessImplementation;
 
-    public string|null $name             = null;
+    public string $name;
     public bool|null $unique             = null;
     public bool|null $quoted             = null;
     public string|null $fieldName        = null;
