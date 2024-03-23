@@ -17,8 +17,8 @@ but not making them hard dependencies.
 Background
 ----------
 
-In the following example, the situation is we have an `InvoiceModule`
-which provides invoicing functionality, and a `CustomerModule` that
+In the following example, the situation is we have an ``InvoiceModule``
+which provides invoicing functionality, and a ``CustomerModule`` that
 contains customer management tools. We want to keep these separated,
 because they can be used in other systems without each other, but for
 our application we want to use them together.

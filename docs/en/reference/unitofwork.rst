@@ -71,7 +71,7 @@ criteria:
         $this->assertSame($objectA, $objectB);
     }
 
-This query will still return the same references and `$objectA` and `$objectB`
+This query will still return the same references and ``$objectA`` and ``$objectB``
 are indeed referencing the same object. However when checking your SQL logs you
 will realize that two queries have been executed against the database. Doctrine
 only knows objects by id, so a query for different criteria has to go to the

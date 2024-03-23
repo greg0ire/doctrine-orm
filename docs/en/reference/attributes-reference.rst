@@ -367,7 +367,7 @@ Optional parameters:
 -  **type**: By default this is string.
 -  **length**: By default this is 255.
 -  **columnDefinition**: By default this is null the definition according to the type will be used. This option allows to override it.
--  **enumType**: By default this is `null`. Allows to map discriminatorColumn value to PHP enum
+-  **enumType**: By default this is ``null``. Allows to map discriminatorColumn value to PHP enum
 -  **options**: See "options" attribute on :ref:`#[Column] <attrref_column>`.
 
 .. _attrref_discriminatormap:

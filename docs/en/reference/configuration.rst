@@ -86,7 +86,7 @@ Or if you prefer YAML:
     $entityManager = new EntityManager($connection, $config);
 
 .. note::
-    If you want to use yml mapping you should add yaml dependency to your `composer.json`:
+    If you want to use yml mapping you should add yaml dependency to your ``composer.json``:
 
     ::
 
@@ -95,9 +95,9 @@ Or if you prefer YAML:
 Inside the ``ORMSetup`` methods several assumptions are made:
 
 -  If ``$isDevMode`` is true caching is done in memory with the ``ArrayAdapter``. Proxy objects are recreated on every request.
--  If ``$isDevMode`` is false, check for Caches in the order APCu, Redis (127.0.0.1:6379), Memcache (127.0.0.1:11211) unless `$cache` is passed as fourth argument.
+-  If ``$isDevMode`` is false, check for Caches in the order APCu, Redis (127.0.0.1:6379), Memcache (127.0.0.1:11211) unless ``$cache`` is passed as fourth argument.
 -  If ``$isDevMode`` is false, set then proxy classes have to be explicitly created through the command line.
--  If third argument `$proxyDir` is not set, use the systems temporary directory.
+-  If third argument ``$proxyDir`` is not set, use the systems temporary directory.
 
 .. note::
 
