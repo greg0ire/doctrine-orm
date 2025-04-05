@@ -2,6 +2,9 @@ includes:
     - phpstan-baseline.neon
     - phpstan-params.neon
 
+rules:
+    - Utils\PHPStan\FrozenClassRule
+
 parameters:
     ignoreErrors:
         # deprecations from doctrine/dbal:3.x

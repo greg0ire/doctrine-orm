@@ -3,6 +3,7 @@ parameters:
     paths:
         - src
         - tests/StaticAnalysis
+        - utils/phpstan/
     excludePaths:
         - src/Mapping/Driver/AttributeReader.php
     earlyTerminatingMethodCalls:

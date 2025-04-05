@@ -68,7 +68,8 @@
         "psr-4": {
             "Doctrine\\Tests\\": "tests/Tests",
             "Doctrine\\StaticAnalysis\\": "tests/StaticAnalysis",
-            "Doctrine\\Performance\\": "tests/Performance"
+            "Doctrine\\Performance\\": "tests/Performance",
+            "Utils\\PHPStan\\": "utils/phpstan/src"
         }
     },
     "bin": ["bin/doctrine"],
