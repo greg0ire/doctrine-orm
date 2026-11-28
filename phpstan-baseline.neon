@@ -2725,6 +2725,12 @@ parameters:
 			path: src/Tools/ExperimentalSchemaTool.php
 
 		-
+			message: '#^Method Doctrine\\ORM\\Tools\\ExperimentalSchemaTool\:\:getDropSchemaSQL\(\) has parameter \$classes with generic class Doctrine\\ORM\\Mapping\\ClassMetadata but does not specify its types\: T$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/Tools/ExperimentalSchemaTool.php
+
+		-
 			message: '#^Method Doctrine\\ORM\\Tools\\ExperimentalSchemaTool\:\:getIndexColumns\(\) has parameter \$class with generic class Doctrine\\ORM\\Mapping\\ClassMetadata but does not specify its types\: T$#'
 			identifier: missingType.generics
 			count: 1

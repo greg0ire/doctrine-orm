@@ -19,6 +19,7 @@ use Doctrine\DBAL\Schema\Index;
 use Doctrine\DBAL\Schema\Index\IndexedColumn;
 use Doctrine\DBAL\Schema\Index\IndexType;
 use Doctrine\DBAL\Schema\IndexEditor;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\DBAL\Schema\SchemaConfig;
@@ -50,6 +51,7 @@ use function array_diff_key;
 use function array_filter;
 use function array_flip;
 use function array_intersect_key;
+use function array_map;
 use function assert;
 use function count;
 use function current;
@@ -499,6 +501,78 @@ final class ExperimentalSchemaTool
 
         // Always retrieve the schema (listener may have mutated it)
         return $schemaEventArgs->getSchema();
+    }
+
+    /**
+     * Gets SQL to drop the tables defined by the passed classes.
+     *
+     * Assets that do not exist in the deployed schema are omitted, so no statement is generated for them.
+     *
+     * @phpstan-param list<ClassMetadata> $classes
+     *
+     * @return list<string>
+     */
+    public function getDropSchemaSQL(array $classes): array
+    {
+        $schema         = $this->getSchemaFromMetadata($classes);
+        $deployedSchema = $this->schemaManager->introspectSchema();
+        $schemaEditor   = $schema->edit();
+
+        $remainingTables = [];
+        foreach ($schema->getTables() as $table) {
+            $tableName = $table->getObjectName()->toString();
+
+            if (! $deployedSchema->hasTable($tableName)) {
+                $schemaEditor->dropTable(NameParser::parseOptionallyQualifiedName($tableName));
+                continue;
+            }
+
+            $remainingTables[] = $table;
+        }
+
+        if ($this->platform->supportsSequences()) {
+            $remainingSequenceNames = [];
+            foreach ($schema->getSequences() as $sequence) {
+                $sequenceName = $sequence->getObjectName()->toString();
+
+                if (! $deployedSchema->hasSequence($sequenceName)) {
+                    $schemaEditor->dropSequence(NameParser::parseOptionallyQualifiedName($sequenceName));
+                    continue;
+                }
+
+                $remainingSequenceNames[$sequenceName] = true;
+            }
+
+            foreach ($remainingTables as $table) {
+                $primaryKey = $table->getPrimaryKeyConstraint();
+
+                if ($primaryKey === null) {
+                    continue;
+                }
+
+                $columns = array_map(
+                    static fn (UnqualifiedName $columnName): string => $columnName->toString(),
+                    $primaryKey->getColumnNames(),
+                );
+
+                if (count($columns) !== 1) {
+                    continue;
+                }
+
+                $checkSequence = $table->getObjectName()->toString() . '_' . $columns[0] . '_seq';
+
+                if ($deployedSchema->hasSequence($checkSequence) && ! isset($remainingSequenceNames[$checkSequence])) {
+                    $schemaEditor->addSequence(
+                        Sequence::editor()
+                            ->setName(NameParser::parseOptionallyQualifiedName($checkSequence))
+                            ->create(),
+                    );
+                    $remainingSequenceNames[$checkSequence] = true;
+                }
+            }
+        }
+
+        return $schemaEditor->create()->toDropSql($this->platform);
     }
 
     /**

@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Doctrine\Tests\ORM\Tools;
 
 use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\EventManager;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLServerPlatform;
+use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint\ReferentialAction;
 use Doctrine\DBAL\Schema\ForeignKeyConstraintEditor;
 use Doctrine\DBAL\Schema\Index as DbalIndex;
@@ -19,6 +22,8 @@ use Doctrine\DBAL\Schema\Name\UnquotedIdentifierFolding;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\DBAL\Schema\PrimaryKeyConstraintEditor;
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Schema\SchemaConfig;
+use Doctrine\DBAL\Schema\Sequence;
 use Doctrine\DBAL\Schema\Table as DbalTable;
 use Doctrine\DBAL\Schema\TableEditor;
 use Doctrine\DBAL\Types\EnumType;
@@ -30,6 +35,7 @@ use Doctrine\ORM\Mapping\Column;
 use Doctrine\ORM\Mapping\DiscriminatorColumn;
 use Doctrine\ORM\Mapping\DiscriminatorMap;
 use Doctrine\ORM\Mapping\Entity;
+use Doctrine\ORM\Mapping\GeneratedValue;
 use Doctrine\ORM\Mapping\Id;
 use Doctrine\ORM\Mapping\Index;
 use Doctrine\ORM\Mapping\InheritanceType;
@@ -38,6 +44,7 @@ use Doctrine\ORM\Mapping\ManyToOne;
 use Doctrine\ORM\Mapping\MappingException;
 use Doctrine\ORM\Mapping\OneToMany;
 use Doctrine\ORM\Mapping\OneToOne;
+use Doctrine\ORM\Mapping\SequenceGenerator;
 use Doctrine\ORM\Mapping\Table;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Doctrine\ORM\Mapping\UniqueConstraint;
@@ -1075,6 +1082,52 @@ class SchemaToolTest extends OrmTestCase
         new SchemaTool($em);
     }
 
+    /** @return iterable<string, array{bool}> */
+    public static function provideSchemaEditorApiUsage(): iterable
+    {
+        yield 'schema editor' => [true];
+        yield 'legacy schema API' => [false];
+    }
+
+    #[IgnoreDeprecations]
+    #[DataProvider('provideSchemaEditorApiUsage')]
+    public function testGetDropSchemaSql(bool $useSchemaEditorApi): void
+    {
+        if ($useSchemaEditorApi && ! method_exists(Schema::class, 'edit')) {
+            self::markTestSkipped('Requires the schema editor API.');
+        }
+
+        $platform       = new PostgreSQLPlatform();
+        $deployedSchema = new Schema(
+            [new DbalTable('DropSchemaWithoutSequence')],
+            [new Sequence('DropSchemaWithoutSequence_id_seq')],
+        );
+
+        $schemaManager = $this->createStub(AbstractSchemaManager::class);
+        $schemaManager->method('createSchemaConfig')->willReturn(new SchemaConfig());
+        $schemaManager->method('introspectSchema')->willReturn($deployedSchema);
+
+        $connection = $this->createConnectionStub($platform);
+        $connection->method('createSchemaManager')->willReturn($schemaManager);
+
+        if (method_exists($connection, 'getEventManager')) {
+            $connection->method('getEventManager')->willReturn(new EventManager());
+        }
+
+        $em = $this->createTestEntityManagerWithConnection($connection);
+        $em->getConfiguration()->setUseSchemaEditorApi($useSchemaEditorApi);
+
+        $sql = (new SchemaTool($em))->getDropSchemaSQL([
+            $em->getClassMetadata(DropSchemaWithSequence::class),
+            $em->getClassMetadata(DropSchemaWithoutSequence::class),
+        ]);
+
+        self::assertSame([
+            $platform->getDropSequenceSQL('DropSchemaWithoutSequence_id_seq'),
+            $platform->getDropTableSQL('DropSchemaWithoutSequence'),
+        ], $sql);
+    }
+
     private function getSchemaTableForEntity(string $className): DbalTable
     {
         $em         = $this->getTestEntityManager();
@@ -1847,4 +1900,22 @@ class GH12807IndexLengths
 
     #[Column(length: 255)]
     public string $second = '';
+}
+
+#[Entity]
+class DropSchemaWithSequence
+{
+    #[Id]
+    #[GeneratedValue(strategy: 'SEQUENCE')]
+    #[SequenceGenerator(sequenceName: 'drop_schema_with_sequence_id_seq', allocationSize: 1, initialValue: 1)]
+    #[Column(type: 'integer')]
+    public int $id = 0;
+}
+
+#[Entity]
+class DropSchemaWithoutSequence
+{
+    #[Id]
+    #[Column(type: 'integer')]
+    public int $id = 0;
 }

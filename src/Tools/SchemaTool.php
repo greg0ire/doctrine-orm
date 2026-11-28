@@ -1108,6 +1108,10 @@ class SchemaTool
      */
     public function getDropSchemaSQL(array $classes): array
     {
+        if ($this->experimentalSchemaTool !== null) {
+            return $this->experimentalSchemaTool->getDropSchemaSQL($classes);
+        }
+
         $schema = $this->getSchemaFromMetadata($classes);
 
         $deployedSchema = $this->schemaManager->introspectSchema();
