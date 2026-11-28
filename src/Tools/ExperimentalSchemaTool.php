@@ -677,10 +677,10 @@ final class ExperimentalSchemaTool
     {
         $indexEditor = Index::editor();
 
-        foreach ($this->getIndexColumns($class, $indexData) as $columnName) {
+        foreach ($this->getIndexColumns($class, $indexData) as $position => $columnName) {
             $indexEditor->addColumn(new IndexedColumn(
                 NameParser::parseUnqualifiedName($columnName),
-                null,
+                $indexData['options']['lengths'][$position] ?? null,
             ));
         }
 
