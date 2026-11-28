@@ -596,8 +596,10 @@ final class ExperimentalSchemaTool
         if (isset($options['default']) && interface_exists(DefaultExpression::class)) {
             if (
                 in_array($mapping->type, [
+                    // @phpstan-ignore classConstant.deprecated (the ORM still supports the mutable datetime type)
                     Types::DATETIME_MUTABLE,
                     Types::DATETIME_IMMUTABLE,
+                    // @phpstan-ignore classConstant.deprecated (the ORM still supports the mutable datetimetz type)
                     Types::DATETIMETZ_MUTABLE,
                     Types::DATETIMETZ_IMMUTABLE,
                 ], true)
@@ -613,6 +615,7 @@ final class ExperimentalSchemaTool
             }
 
             if (
+                // @phpstan-ignore classConstant.deprecated (the ORM still supports the mutable time type)
                 in_array($mapping->type, [Types::TIME_MUTABLE, Types::TIME_IMMUTABLE], true)
                 && $options['default'] === $this->platform->getCurrentTimeSQL()
             ) {
@@ -626,6 +629,7 @@ final class ExperimentalSchemaTool
             }
 
             if (
+                // @phpstan-ignore classConstant.deprecated (the ORM still supports the mutable date type)
                 in_array($mapping->type, [Types::DATE_MUTABLE, Types::DATE_IMMUTABLE], true)
                 && $options['default'] === $this->platform->getCurrentDateSQL()
             ) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Doctrine\Tests\ORM\Functional;
 
-use DateTime;
+use DateTimeImmutable;
 use DateTimeZone;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\Tests\Models\Generic\BooleanModel;
@@ -68,7 +68,7 @@ class TypeTest extends OrmFunctionalTestCase
     public function testDate(): void
     {
         $dateTime       = new DateTimeModel();
-        $dateTime->date = new DateTime('2009-10-01', new DateTimeZone('Europe/Berlin'));
+        $dateTime->date = new DateTimeImmutable('2009-10-01', new DateTimeZone('Europe/Berlin'));
 
         $this->_em->persist($dateTime);
         $this->_em->flush();
@@ -76,14 +76,14 @@ class TypeTest extends OrmFunctionalTestCase
 
         $dateTimeDb = $this->_em->find(DateTimeModel::class, $dateTime->id);
 
-        self::assertInstanceOf(DateTime::class, $dateTimeDb->date);
+        self::assertInstanceOf(DateTimeImmutable::class, $dateTimeDb->date);
         self::assertSame('2009-10-01', $dateTimeDb->date->format('Y-m-d'));
     }
 
     public function testDateTime(): void
     {
         $dateTime           = new DateTimeModel();
-        $dateTime->datetime = new DateTime('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
+        $dateTime->datetime = new DateTimeImmutable('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
 
         $this->_em->persist($dateTime);
         $this->_em->flush();
@@ -91,18 +91,18 @@ class TypeTest extends OrmFunctionalTestCase
 
         $dateTimeDb = $this->_em->find(DateTimeModel::class, $dateTime->id);
 
-        self::assertInstanceOf(DateTime::class, $dateTimeDb->datetime);
+        self::assertInstanceOf(DateTimeImmutable::class, $dateTimeDb->datetime);
         self::assertSame('2009-10-02 20:10:52', $dateTimeDb->datetime->format('Y-m-d H:i:s'));
 
         $articles = $this->_em->getRepository(DateTimeModel::class)
-                              ->findBy(['datetime' => new DateTime()]);
+                              ->findBy(['datetime' => new DateTimeImmutable()]);
 
         self::assertEmpty($articles);
     }
 
     public function testDqlQueryBindDateTimeInstance(): void
     {
-        $date = new DateTime('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
+        $date = new DateTimeImmutable('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
 
         $dateTime           = new DateTimeModel();
         $dateTime->datetime = $date;
@@ -112,16 +112,16 @@ class TypeTest extends OrmFunctionalTestCase
         $this->_em->clear();
 
         $dateTimeDb = $this->_em->createQuery('SELECT d FROM Doctrine\Tests\Models\Generic\DateTimeModel d WHERE d.datetime = ?1')
-                                ->setParameter(1, $date, Types::DATETIME_MUTABLE)
+                                ->setParameter(1, $date, Types::DATETIME_IMMUTABLE)
                                 ->getSingleResult();
 
-        self::assertInstanceOf(DateTime::class, $dateTimeDb->datetime);
+        self::assertInstanceOf(DateTimeImmutable::class, $dateTimeDb->datetime);
         self::assertSame('2009-10-02 20:10:52', $dateTimeDb->datetime->format('Y-m-d H:i:s'));
     }
 
     public function testDqlQueryBuilderBindDateTimeInstance(): void
     {
-        $date = new DateTime('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
+        $date = new DateTimeImmutable('2009-10-02 20:10:52', new DateTimeZone('Europe/Berlin'));
 
         $dateTime           = new DateTimeModel();
         $dateTime->datetime = $date;
@@ -134,17 +134,17 @@ class TypeTest extends OrmFunctionalTestCase
                                  ->select('d')
                                  ->from(DateTimeModel::class, 'd')
                                  ->where('d.datetime = ?1')
-                                 ->setParameter(1, $date, Types::DATETIME_MUTABLE)
+                                 ->setParameter(1, $date, Types::DATETIME_IMMUTABLE)
                                  ->getQuery()->getSingleResult();
 
-        self::assertInstanceOf(DateTime::class, $dateTimeDb->datetime);
+        self::assertInstanceOf(DateTimeImmutable::class, $dateTimeDb->datetime);
         self::assertSame('2009-10-02 20:10:52', $dateTimeDb->datetime->format('Y-m-d H:i:s'));
     }
 
     public function testTime(): void
     {
         $dateTime       = new DateTimeModel();
-        $dateTime->time = new DateTime('2010-01-01 19:27:20');
+        $dateTime->time = new DateTimeImmutable('2010-01-01 19:27:20');
 
         $this->_em->persist($dateTime);
         $this->_em->flush();
@@ -152,14 +152,14 @@ class TypeTest extends OrmFunctionalTestCase
 
         $dateTimeDb = $this->_em->find(DateTimeModel::class, $dateTime->id);
 
-        self::assertInstanceOf(DateTime::class, $dateTimeDb->time);
+        self::assertInstanceOf(DateTimeImmutable::class, $dateTimeDb->time);
         self::assertSame('19:27:20', $dateTimeDb->time->format('H:i:s'));
     }
 
     public function testFindByDateWithString(): void
     {
         $dateTime       = new DateTimeModel();
-        $dateTime->date = new DateTime('2009-10-01', new DateTimeZone('Europe/Berlin'));
+        $dateTime->date = new DateTimeImmutable('2009-10-01', new DateTimeZone('Europe/Berlin'));
 
         $this->_em->persist($dateTime);
         $this->_em->flush();
@@ -175,7 +175,7 @@ class TypeTest extends OrmFunctionalTestCase
     public function testFindByTimeWithString(): void
     {
         $dateTime       = new DateTimeModel();
-        $dateTime->time = new DateTime('2010-01-01 19:27:20');
+        $dateTime->time = new DateTimeImmutable('2010-01-01 19:27:20');
 
         $this->_em->persist($dateTime);
         $this->_em->flush();
