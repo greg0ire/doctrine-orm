@@ -29,6 +29,7 @@ final class DefaultTypedFieldMapper implements TypedFieldMapper
 
     private const array DEFAULT_TYPED_FIELD_MAPPINGS = [
         DateInterval::class => Types::DATEINTERVAL,
+        // @phpstan-ignore classConstant.deprecated (a DateTime-typed property is mapped to the mutable datetime type)
         DateTime::class => Types::DATETIME_MUTABLE,
         DateTimeImmutable::class => Types::DATETIME_IMMUTABLE,
         Number::class => Types::NUMBER,
